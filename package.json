@@ -1,0 +1,17 @@
+{
+  "name": "pocket-server-orchestrator",
+  "version": "1.0.0",
+  "description": "Sidecar Orchestrator for Pocket Server",
+  "main": "server.ts",
+  "scripts": {
+    "start": "tsx server.ts"
+  },
+  "dependencies": {
+    "fastify": "^4.26.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}

@@ -52,18 +52,22 @@ ENV GIT_USER_NAME="Pocket Agent" \
 # em Next.js ou Node.js) serão clonados pela IA.
 # -----------------------------------------------------------------------------
 WORKDIR /app
+
+COPY package.json tsconfig.json ./
+RUN npm install
+
+COPY server.ts ./
+
 EXPOSE 3000
+EXPOSE 3001
 
 # -----------------------------------------------------------------------------
-# 5. SCRIPT DE INICIALIZAÇÃO (BOOT)
-# Este comando roda toda vez que o container (ou a VPS) é reiniciado.
-# a) Configura o nome e email do Git com as variáveis.
-# b) Se o token do GitHub existir, injeta silenciosamente para autenticação.
-# c) Inicia o servidor em primeiro plano (exec) para manter o container vivo.
+# 5. COMANDO DE INICIALIZAÇÃO (SIDECAR ORCHESTRATOR)
 # -----------------------------------------------------------------------------
-CMD ["/bin/sh", "-c", "\
+CMD ["/bin/bash", "-c", "\
     git config --global user.name \"$GIT_USER_NAME\" && \
     git config --global user.email \"$GIT_USER_EMAIL\" && \
     if [ -n \"$GITHUB_TOKEN\" ]; then git config --global url.\"https://${GITHUB_TOKEN}@github.com/\".insteadOf \"https://github.com/\"; fi; \
-    exec pocket-server start\
+    echo 'Iniciando Sidecar Orchestrator Node.js...'; \
+    npm start \
     "]
