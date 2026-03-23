@@ -65,5 +65,5 @@ CMD ["/bin/sh", "-c", "\
     git config --global user.name \"$GIT_USER_NAME\" && \
     git config --global user.email \"$GIT_USER_EMAIL\" && \
     if [ -n \"$GITHUB_TOKEN\" ]; then git config --global url.\"https://${GITHUB_TOKEN}@github.com/\".insteadOf \"https://github.com/\"; fi; \
-    exec pocket-server start\
+    exec pocket-server pair --remote\
     "]
