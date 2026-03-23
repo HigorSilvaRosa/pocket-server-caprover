@@ -77,46 +77,43 @@ fastify.post('/api/pair', async (request, reply) => {
   return new Promise((resolve) => {
     let responded = false;
 
+    const tryRespond = (pairToken: string) => {
+      if (responded) return;
+      responded = true;
+      request.log.info(`Captured Pairing Token from stdout: ${pairToken}`);
+      resolve(reply.send({
+        success: true,
+        deviceName: body.deviceName,
+        pin,
+        token: pairToken,
+      }));
+      // Do NOT kill pairingProcess — it must stay alive for 60s so pocket-server
+      // can accept the pairing request from the PWA using the PIN + token
+    };
+
     pairingProcess?.stdout?.on('data', (data: Buffer) => {
-      request.log.info(`[pair stdout]: ${data.toString()}`);
+      const text = data.toString();
+      request.log.info(`[pair stdout]: ${text}`);
+      // Extract: "Pairing Token: <token>"
+      const match = text.match(/Pairing Token:\s*(\S+)/);
+      if (match) tryRespond(match[1]);
     });
 
     pairingProcess?.stderr?.on('data', (data: Buffer) => {
       request.log.warn(`[pair stderr]: ${data.toString()}`);
     });
 
-    // Execution order in pocket-server pair --remote:
-    //   1. startPairingWindow() → writes pin (hashed) + pairToken to pairing.json ✓
-    //   2. createPairingDisplay() → crashes with RangeError (box rendering in non-TTY)
-    //
-    // We own the PIN (generated above) and we read pairToken from the JSON after close.
     pairingProcess?.on('close', (code) => {
       request.log.info(`Pairing process closed with code ${code}`);
       pairingProcess = null;
 
       if (!responded) {
         responded = true;
-        const state = readPairingState();
-        request.log.info(`Pairing JSON state: ${JSON.stringify(state)}`);
-
-        if (state?.active && state.pairToken) {
-          resolve(reply.send({
-            success: true,
-            deviceName: body.deviceName,
-            pin,
-            token: state.pairToken,
-            expiresAt: state.expiresAt,
-          }));
-        } else {
-          resolve(reply.status(500).send({
-            error: 'Failed to start pairing session',
-            detail: { stateActive: state?.active, hasPairToken: !!state?.pairToken }
-          }));
-        }
-
-        // Restart the standard server in the background
-        startPocketServer();
+        resolve(reply.status(500).send({ error: 'Failed to capture pairing token from pocket-server output' }));
       }
+
+      // Restart standard server after pairing window closes
+      startPocketServer();
     });
   });
 });
