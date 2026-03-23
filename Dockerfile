@@ -69,5 +69,5 @@ CMD ["/bin/bash", "-c", "\
     git config --global user.email \"$GIT_USER_EMAIL\" && \
     if [ -n \"$GITHUB_TOKEN\" ]; then git config --global url.\"https://${GITHUB_TOKEN}@github.com/\".insteadOf \"https://github.com/\"; fi; \
     echo 'Iniciando Sidecar Orchestrator Node.js...'; \
-    npm start \
+    exec npx tsx server.ts \
     "]
