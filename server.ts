@@ -31,8 +31,8 @@ fastify.post('/api/pair', async (request, reply) => {
   let apiKey = authHeader;
 
   const serverApiKey = process.env.API_KEY;
-  console.log('Server API Key:', serverApiKey);
-  console.log('Auth Header:', authHeader);
+  request.log.info(`Server API Key: ${serverApiKey}`);
+  request.log.info(`Auth Header: ${authHeader}`);
 
   if (apiKey && apiKey.toLowerCase().startsWith('bearer ')) {
     apiKey = apiKey.substring(7).trim();
@@ -53,14 +53,14 @@ fastify.post('/api/pair', async (request, reply) => {
 
   // Liberar a rede: matar o processo principal
   if (currentProcess && !currentProcess.killed) {
-    console.log('Killing current pocket-server to free up port/network for pairing...');
+    request.log.info('Killing current pocket-server to free up port/network for pairing...');
     currentProcess.kill();
     currentProcess = null;
     // Pequena pausa para garantir que a porta/interface foi liberada
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
-  console.log(`Starting pairing process for device: ${body.deviceName}`);
+  request.log.info(`Starting pairing process for device: ${body.deviceName}`);
 
   // Iniciar o pair
   pairingProcess = spawn('pocket-server', ['pair', '--remote'], {
@@ -75,7 +75,7 @@ fastify.post('/api/pair', async (request, reply) => {
     pairingProcess?.stdout?.on('data', (data: Buffer) => {
       const outputRaw = data.toString();
       const output = stripAnsi(outputRaw);
-      console.log(`[pocket-server pair raw]: ${outputRaw}`);
+      request.log.info(`[pocket-server pair raw]: ${outputRaw}`);
 
       // Usando match para PIN (6 dígitos) e token
       const pinMatch = output.match(/PIN(?: Code)?.*?(\d{6})/i) || output.match(/(\d{6})/);
@@ -87,18 +87,18 @@ fastify.post('/api/pair', async (request, reply) => {
       // Assim que capturar ambos, responder JSON 
       if (pin && token && !responded) {
         responded = true;
-        console.log(`Captured PIN: ${pin}, Token: ${token}`);
+        request.log.info(`Captured PIN: ${pin}, Token: ${token}`);
         resolve(reply.send({ success: true, deviceName: body.deviceName, pin, token, expiresIn: "60s" }));
       }
     });
 
     pairingProcess?.stderr?.on('data', (data: Buffer) => {
-      console.error(`[pocket-server pair stderr]: ${data.toString()}`);
+      request.log.error(`[pocket-server pair stderr]: ${data.toString()}`);
     });
 
     // O processo pair se encerra sozinho após 60s
     pairingProcess?.on('close', (code) => {
-      console.log(`Pairing process closed with code ${code}`);
+      request.log.info(`Pairing process closed with code ${code}`);
       pairingProcess = null;
 
       if (!responded) {
