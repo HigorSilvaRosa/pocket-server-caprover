@@ -27,7 +27,13 @@ function startPocketServer() {
 startPocketServer();
 
 fastify.post('/api/pair', async (request, reply) => {
-  const apiKey = request.headers['x-api-key'];
+  const authHeader = request.headers['authorization'];
+  let apiKey = authHeader;
+  
+  if (apiKey && apiKey.toLowerCase().startsWith('bearer ')) {
+    apiKey = apiKey.substring(7).trim();
+  }
+
   if (!process.env.API_KEY || apiKey !== process.env.API_KEY) {
     return reply.status(401).send({ error: 'Unauthorized' });
   }
