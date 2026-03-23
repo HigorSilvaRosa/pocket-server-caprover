@@ -34,7 +34,8 @@ RUN echo "Baixando e instalando o Pocket Server..." && \
     sed -i 's/pocket-server.tar.gz/pocket-server.XXXXXX.tar.gz/g' install.sh && \
     timeout 30 bash install.sh || true && \
     test -f /root/.pocket-server/bin/pocket-server && \
-    rm install.sh
+    rm install.sh && \
+    sed -i 's/" ".repeat(padding - 1)/" ".repeat(Math.max(0, padding - 1))/g' /root/.pocket-server/releases/v1.0.6/app/dist/cli.js
 
 # -----------------------------------------------------------------------------
 # 3. VARIÁVEIS DE AMBIENTE E PATH
