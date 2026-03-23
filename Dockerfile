@@ -58,6 +58,9 @@ RUN npm install
 
 COPY server.ts ./
 
+# Criando a pasta do workspace vazio para que o pocket-server tenha onde operar
+RUN mkdir -p /app/workspace
+
 EXPOSE 3000
 EXPOSE 3001
 

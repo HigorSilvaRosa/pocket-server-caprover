@@ -16,7 +16,7 @@ function startPocketServer() {
     currentProcess.kill();
   }
   console.log('Starting standard pocket-server on port 3000...');
-  currentProcess = spawn('pocket-server', ['start'], { stdio: 'inherit', env: process.env });
+  currentProcess = spawn('pocket-server', ['start'], { cwd: '/app/workspace', stdio: 'inherit', env: process.env });
 
   currentProcess.on('close', (code) => {
     console.log(`Standard pocket-server exited with code ${code}`);
@@ -64,6 +64,7 @@ fastify.post('/api/pair', async (request, reply) => {
 
   // Iniciar o pair
   pairingProcess = spawn('pocket-server', ['pair', '--remote'], {
+    cwd: '/app/workspace',
     env: { ...process.env, COLUMNS: '132', LINES: '24' }
   });
 
