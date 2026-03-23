@@ -1,7 +1,19 @@
 import Fastify from 'fastify';
 import { spawn, ChildProcess } from 'child_process';
+import { writeFileSync } from 'fs';
 
 const fastify = Fastify({ logger: true });
+
+// Workaround for creating boxes in non-tty CapRover environments
+const FAKE_TTY_PATH = '/tmp/fake-tty.cjs';
+writeFileSync(FAKE_TTY_PATH, `
+if (!process.stdout.columns) {
+  Object.defineProperty(process.stdout, 'columns', { get: function() { return 132; }, configurable: true });
+}
+if (!process.stdout.rows) {
+  Object.defineProperty(process.stdout, 'rows', { get: function() { return 24; }, configurable: true });
+}
+`);
 
 let currentProcess: ChildProcess | null = null;
 let pairingProcess: ChildProcess | null = null;
@@ -16,7 +28,11 @@ function startPocketServer() {
     currentProcess.kill();
   }
   console.log('Starting standard pocket-server on port 3000...');
-  currentProcess = spawn('pocket-server', ['start'], { cwd: '/app/workspace', stdio: 'inherit', env: process.env });
+  currentProcess = spawn('pocket-server', ['start'], { 
+    cwd: '/app/workspace', 
+    stdio: 'inherit', 
+    env: { ...process.env, NODE_OPTIONS: `--require ${FAKE_TTY_PATH}` } 
+  });
 
   currentProcess.on('close', (code) => {
     console.log(`Standard pocket-server exited with code ${code}`);
@@ -65,7 +81,7 @@ fastify.post('/api/pair', async (request, reply) => {
   // Iniciar o pair
   pairingProcess = spawn('pocket-server', ['pair', '--remote'], {
     cwd: '/app/workspace',
-    env: { ...process.env, COLUMNS: '132', LINES: '24' }
+    env: { ...process.env, COLUMNS: '132', LINES: '24', NODE_OPTIONS: `--require ${FAKE_TTY_PATH}` }
   });
 
   return new Promise((resolve) => {
