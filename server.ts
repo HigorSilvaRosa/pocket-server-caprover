@@ -17,7 +17,7 @@ function startPocketServer() {
   }
   console.log('Starting standard pocket-server on port 3000...');
   currentProcess = spawn('pocket-server', ['start'], { stdio: 'inherit', env: process.env });
-  
+
   currentProcess.on('close', (code) => {
     console.log(`Standard pocket-server exited with code ${code}`);
   });
@@ -29,12 +29,16 @@ startPocketServer();
 fastify.post('/api/pair', async (request, reply) => {
   const authHeader = request.headers['authorization'];
   let apiKey = authHeader;
-  
+
+  const serverApiKey = process.env.API_KEY;
+  console.log('Server API Key:', serverApiKey);
+  console.log('Auth Header:', authHeader);
+
   if (apiKey && apiKey.toLowerCase().startsWith('bearer ')) {
     apiKey = apiKey.substring(7).trim();
   }
 
-  if (!process.env.API_KEY || apiKey !== process.env.API_KEY) {
+  if (!serverApiKey || apiKey !== serverApiKey) {
     return reply.status(401).send({ error: 'Unauthorized' });
   }
 
@@ -57,7 +61,7 @@ fastify.post('/api/pair', async (request, reply) => {
   }
 
   console.log(`Starting pairing process for device: ${body.deviceName}`);
-  
+
   // Iniciar o pair
   pairingProcess = spawn('pocket-server', ['pair', '--remote'], {
     env: { ...process.env, COLUMNS: '132', LINES: '24' }
@@ -89,19 +93,19 @@ fastify.post('/api/pair', async (request, reply) => {
     });
 
     pairingProcess?.stderr?.on('data', (data: Buffer) => {
-        console.error(`[pocket-server pair stderr]: ${data.toString()}`);
+      console.error(`[pocket-server pair stderr]: ${data.toString()}`);
     });
 
     // O processo pair se encerra sozinho após 60s
     pairingProcess?.on('close', (code) => {
       console.log(`Pairing process closed with code ${code}`);
       pairingProcess = null;
-      
+
       if (!responded) {
         responded = true;
         resolve(reply.status(500).send({ error: 'Failed to capture credentials within time limit' }));
       }
-      
+
       // Reviver o pocket-server start silenciosamente no fundo
       startPocketServer();
     });
