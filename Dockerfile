@@ -5,10 +5,12 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends git curl ca-certificates openssh-client && \
     rm -rf /var/lib/apt/lists/*
 
-# 2. O Pulo do Gato: Baixamos o script, injetamos os "XXXXXX" para consertar o bug do Linux e instalamos na própria imagem
-RUN echo "Baixando e corrigindo o instalador..." && \
+# 2. Baixamos o script, consertamos o bug do Linux, instalamos E forçamos o encerramento do script caso ele tente travar o build
+RUN echo "Baixando, corrigindo e instalando..." && \
     curl -fsSL https://www.pocket-agent.xyz/install -o install.sh && \
     sed -i 's/pocket-server.tar.gz/pocket-server.XXXXXX.tar.gz/g' install.sh && \
+    # Modificamos o script deles na hora para remover a linha que tenta iniciar o servidor
+    sed -i 's/pocket-server start//g' install.sh && \
     bash install.sh && \
     rm install.sh
 
