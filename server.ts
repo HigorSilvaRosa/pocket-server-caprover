@@ -34,8 +34,8 @@ fastify.post('/api/pair', async (request, reply) => {
   request.log.info(`Server API Key: ${serverApiKey}`);
   request.log.info(`Auth Header: ${authHeader}`);
 
-  if (apiKey && apiKey.toLowerCase().startsWith('bearer ')) {
-    apiKey = apiKey.substring(7).trim();
+  if (apiKey) {
+    apiKey = apiKey.replace(/^Bearer\s+/i, '').trim();
   }
 
   if (!serverApiKey || apiKey !== serverApiKey) {
