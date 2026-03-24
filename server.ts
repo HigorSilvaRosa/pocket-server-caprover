@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import fastifyCors from '@fastify/cors';
+import fastifyHttpProxy from '@fastify/http-proxy';
 import { spawn, ChildProcess } from 'child_process';
 import path from 'path';
 
@@ -14,6 +15,17 @@ fastify.register(fastifyCors, { origin: '*' });
 fastify.register(fastifyStatic, {
   root: path.resolve(__dirname, 'frontend', 'dist'),
   prefix: '/',
+});
+
+// ---------------------------------------------------------------------------
+// Proxy /pocket-server/* → http://localhost:3000 (mirrors nginx config)
+// ---------------------------------------------------------------------------
+fastify.register(fastifyHttpProxy, {
+  upstream: 'http://localhost:3000',
+  prefix: '/pocket-server',
+  rewritePrefix: '/',
+  websocket: true,
+  http2: false,
 });
 
 // ---------------------------------------------------------------------------
@@ -49,6 +61,12 @@ startPocketServer();
 fastify.post('/api/pair', async (request, reply) => {
   const apiKey = request.headers['x-api-key'] as string | undefined;
   const serverApiKey = process.env.API_KEY;
+
+  console.log({
+    serverApiKey,
+    apiKey,
+    request
+  })
 
   if (!serverApiKey || apiKey !== serverApiKey) {
     return reply.status(401).send({ error: 'Unauthorized' });
@@ -127,6 +145,8 @@ fastify.post('/api/pair', async (request, reply) => {
     });
   });
 });
+
+
 
 // ---------------------------------------------------------------------------
 // SPA fallback — serve index.html for any unknown route

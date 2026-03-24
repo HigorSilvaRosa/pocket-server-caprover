@@ -14,8 +14,16 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  html {
+    min-height: 100%;
+  }
+
   body {
     @apply bg-[#0a0c10] text-slate-100 font-sans min-h-screen m-0;
+  }
+
+  #root {
+    @apply min-h-screen;
   }
 }
 
@@ -45,5 +53,41 @@
       border border-violet-500/40 rounded-xl
       text-4xl font-bold font-mono text-violet-200
       shadow-inner;
+  }
+
+  .section-kicker {
+    @apply text-[11px] font-semibold uppercase tracking-[0.32em] text-violet-300/75;
+  }
+
+  .nav-link {
+    @apply flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-4 transition-all duration-200 hover:border-white/20 hover:bg-white/10;
+  }
+
+  .nav-link-active {
+    @apply border-violet-500/50 bg-violet-500/10 shadow-lg shadow-violet-500/10;
+  }
+
+  .step-badge {
+    @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-violet-400/30 bg-violet-500/10 font-mono text-xs font-semibold text-violet-200;
+  }
+
+  .status-pill {
+    @apply inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em];
+  }
+
+  .status-pill-success {
+    @apply border-emerald-500/30 bg-emerald-500/10 text-emerald-300;
+  }
+
+  .status-pill-muted {
+    @apply border-white/10 bg-white/5 text-slate-500;
+  }
+
+  .selection-card {
+    @apply flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 transition-colors duration-200 hover:border-white/20;
+  }
+
+  .selection-card-active {
+    @apply border-violet-500/60 bg-violet-500/10;
   }
 }
